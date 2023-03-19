@@ -10,8 +10,6 @@
   },
   "dependencies": {
     "@discordjs/voice": "^0.15.0",
-    "@sapphire/framework": "^4.2.2",
-    "discord-player": "^6.1.1",
     "discord.js": "^14.8.0",
     "dotenv": "^16.0.3",
     "libsodium-wrappers": "^0.7.11",

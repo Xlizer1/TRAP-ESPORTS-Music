@@ -1,0 +1,20 @@
+{
+  "name": "trap-music",
+  "version": "1.0.0",
+  "main": "bot.js",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "nodemon bot.js"
+  },
+  "dependencies": {
+    "@discordjs/voice": "^0.15.0",
+    "@sapphire/framework": "^4.2.2",
+    "discord-player": "^6.1.1",
+    "discord.js": "^14.8.0",
+    "dotenv": "^16.0.3",
+    "libsodium-wrappers": "^0.7.11",
+    "play-dl": "^1.9.6"
+  }
+}

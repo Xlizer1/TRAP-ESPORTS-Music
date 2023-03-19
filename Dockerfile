@@ -8,4 +8,4 @@ WORKDIR /bot
 COPY --from=BUILD /usr/lib/ /usr/lib/
 COPY --from=BUILD /lib/ /lib/
 COPY --from=BUILD /build/ /bot
-CMD ["node", "bot.js"]
+CMD ["node", "./bot.js"]

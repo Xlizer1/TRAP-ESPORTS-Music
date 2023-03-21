@@ -4,4 +4,4 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install
 COPY . .
-CMD ["node", "bot.js", "${DISCORD_TOKEN}"]
+CMD ["node", "bot.js"]

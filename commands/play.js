@@ -1,10 +1,11 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { RepeatMode } = require("discord-music-player/dist");
 const {
-  joinVoiceChannel,
-  createAudioPlayer,
-  createAudioResource,
-  NoSubscriberBehavior,
-} = require("@discordjs/voice");
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
+  ButtonBuilder,
+} = require("discord.js");
 const play = require("play-dl");
 
 module.exports = {
@@ -17,45 +18,115 @@ module.exports = {
         .setDescription("Type you song name")
         .setRequired(true)
     ),
-  async execute(interaction) {
-    const connection = joinVoiceChannel({
-      channelId: interaction.member.voice.channel.id,
-      guildId: interaction.guild.id,
-      adapterCreator: interaction.guild.voiceAdapterCreator,
+  async execute(client, interaction) {
+    await interaction.deferReply();
+    if (!interaction.member.voice.channel)
+      return interaction.editReply("You need to be in voice channel");
+
+    let queue = await client.player.createQueue(interaction.guild.id, {
+      metadata: { channel: interaction.channel },
+      bufferingTimeout: 1000,
+      disableVolume: false,
+      leaveOnEnd: true,
+      leaveOnStop: true,
+      spotifyBridge: false,
     });
-
-    const voiceChannel = interaction.member.voice.channel;
-
-    if (!voiceChannel)
-      return await interaction.reply(
-        "You need to be in a voice channel to play music!"
-      );
 
     const searchTerms = interaction.options.get("search").value;
 
     const video = await play.search(searchTerms, { limit: 1 });
     if (!video[0])
-      return interaction.reply("Sorry, I couldn't find that song!");
+      return interaction.editReply("Sorry, I couldn't find that song!");
 
     const stream = await play.stream(video[0].url);
-    let resource = createAudioResource(stream.stream, {
-      inputType: stream.type,
-    });
 
-    let player = createAudioPlayer({
-      behaviors: {
-        noSubscriber: NoSubscriberBehavior.Play,
-      },
-      metadata: {
-        volume: 0.25,
-        quality: "high",
-      },
-    });
+    try {
+      await queue.join(interaction.member.voice.channel);
+    } catch (e) {
+      console.log(e);
+    }
+    await queue.play(stream.video_url);
 
-    player.play(resource);
-    connection.subscribe(player);
-    interaction.channel.send(`Now playing: ${video[0].title}`);
+    const embed = new EmbedBuilder()
+      .setColor(0x23272a)
+      .setTitle(video[0].title)
+      .setURL(video[0].url)
+      .setDescription(video[0].description);
 
-    interaction.editReply("Task completed!");
+    const message = await interaction
+      .editReply({
+        ephemeral: true,
+        embeds: [embed],
+      })
+      .then(async (msg) => {
+        await msg
+          .react("⏸")
+          .then(() => msg.react("⏹"))
+          .then(() => msg.react("⏩"))
+          .then(() => msg.react("⏭"))
+          .then(() => msg.react("🔀"))
+          .then(() => msg.react("🔂"))
+          .then(() => msg.react("🔁"));
+
+        const filter = (reaction, user) => {
+          return ["⏸", "⏹", "⏩", "⏭", "🔀", "🔂", "🔁"].includes(
+            reaction.emoji.name
+          );
+        };
+
+        const collector = msg.createReactionCollector(filter);
+
+        let paused = false;
+
+        collector.on("collect", async (reaction, user) => {
+          let reactionName = await reaction.emoji.name;
+
+          if (reactionName === "⏸") {
+            if (!queue)
+              return await interaction.editReply(
+                "there is no song in the queue!"
+              );
+            if (!paused) {
+              await queue.setPaused(true);
+              paused = true;
+            } else {
+              await queue.setPaused(false);
+              paused = false;
+            }
+          } else if (reactionName === "⏹") {
+            if (!queue)
+              return await interaction.editReply(
+                "there is no song in the queue!"
+              );
+            await queue.stop();
+          } else if (reactionName === "⏩") {
+            if (!queue)
+              return await interaction.editReply(
+                "there is no song in the queue!"
+              );
+            await queue.skip();
+          } else if (reactionName === "⏭") {
+            if (!queue)
+              return await interaction.editReply("there is no queue!");
+            await queue.clearQueue();
+          } else if (reactionName === "🔀") {
+            if (!queue)
+              return await interaction.editReply("there is no queue!");
+            await queue.shuffle();
+          } else if (reactionName === "🔂") {
+            if (!queue)
+              return await interaction.editReply("there is no queue!");
+            await queue.setRepeatMode(RepeatMode.SONG);
+          } else if (reactionName === "🔁") {
+            if (!queue)
+              return await interaction.editReply(
+                "there is no song in the queue!"
+              );
+            await queue.setRepeatMode(RepeatMode.QUEUE);
+          }
+
+          await reaction.users.remove(user.id);
+        });
+      });
   },
 };

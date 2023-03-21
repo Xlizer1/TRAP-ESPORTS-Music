@@ -1,3 +1,4 @@
+const { Player } = require("discord-music-player");
 const {
   Client,
   ActivityType,
@@ -13,7 +14,7 @@ require("dotenv").config();
 
 const { TOKEN, CLIENTID, GUILDID } = process.env;
 
-const bot = new Client({
+const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
@@ -34,9 +35,17 @@ const bot = new Client({
   },
 });
 
+const player = new Player(client, {
+  timeout: 86400000,
+  volume: 200,
+  quality: "high",
+});
+
+client.player = player;
+
 const commands = [];
 
-bot.commands = new Collection();
+client.commands = new Collection();
 
 const commandsPath = path.join(__dirname, "commands");
 const commandFiles = fs
@@ -47,13 +56,13 @@ for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
   const command = require(filePath);
   commands.push(command.data.toJSON());
-  bot.commands.set(command.data.name, command);
+  client.commands.set(command.data.name, command);
 }
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
 // and deploy your commands!
-bot.once("ready", () => {
+client.once("ready", () => {
   (async () => {
     try {
       console.log(
@@ -67,7 +76,7 @@ bot.once("ready", () => {
       );
 
       console.log(
-        `Successfully reloaded ${data.length} application (/) commands.`
+        `Successfully loaded ${data.length} application (/) commands.`
       );
     } catch (error) {
       // And of course, make sure you catch and log any errors!
@@ -76,16 +85,15 @@ bot.once("ready", () => {
   })();
 });
 
-bot.on(Events.InteractionCreate, async (interaction) => {
+client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  const command = bot.commands.get(interaction.commandName);
+  const command = client.commands.get(interaction.commandName);
 
   if (!command) return;
 
   try {
-    interaction.deferReply();
-    await command.execute(interaction);
+    await command.execute(client, interaction);
   } catch (error) {
     console.error(error);
     if (interaction.replied || interaction.deferred) {
@@ -102,4 +110,4 @@ bot.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-bot.login(TOKEN);
+client.login(TOKEN);

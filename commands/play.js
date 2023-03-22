@@ -36,7 +36,7 @@ module.exports = {
 
     const video = await play.search(searchTerms, { limit: 1 });
     if (!video[0])
-      return interaction.editReply("Sorry, I couldn't find that song!");
+      return await interaction.editReply("Sorry, I couldn't find that song!");
 
     const stream = await play.stream(video[0].url);
 
@@ -76,7 +76,7 @@ module.exports = {
           );
         };
 
-        const collector = msg.createReactionCollector(filter);
+        const collector = await msg.createReactionCollector(filter);
 
         let paused = false;
 

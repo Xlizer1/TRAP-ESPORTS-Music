@@ -61,6 +61,7 @@ module.exports = {
       .then(async (msg) => {
         await msg
           .react("⏸")
+          .then(() => msg.react("▶"))
           .then(() => msg.react("⏹"))
           .then(() => msg.react("⏩"))
           .then(() => msg.react("⏭"))
@@ -69,14 +70,14 @@ module.exports = {
           .then(() => msg.react("🔁"));
 
         const filter = (reaction, user) => {
-          return ["⏸", "⏹", "⏩", "⏭", "🔀", "🔂", "🔁"].includes(
-            reaction.emoji.name
+          return (
+            ["⏸", "⏸", "⏹", "⏩", "⏭", "🔀", "🔂", "🔁"].includes(
+              reaction.emoji.name
+            ) && user.id === message.author.id
           );
         };
 
         const collector = msg.createReactionCollector(filter);
-
-        let paused = false;
 
         collector.on("collect", async (reaction, user) => {
           let reactionName = await reaction.emoji.name;
@@ -86,13 +87,13 @@ module.exports = {
               return await interaction.editReply(
                 "there is no song in the queue!"
               );
-            if (!paused) {
-              await queue.setPaused(true);
-              paused = true;
-            } else {
-              await queue.setPaused(false);
-              paused = false;
-            }
+            await queue.setPaused(true);
+          } else if (reactionName === "▶") {
+            if (!queue)
+              return await interaction.editReply(
+                "there is no song in the queue!"
+              );
+            await queue.setPaused(false);
           } else if (reactionName === "⏹") {
             if (!queue)
               return await interaction.editReply(

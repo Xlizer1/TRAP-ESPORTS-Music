@@ -27,8 +27,8 @@ module.exports = {
       metadata: { channel: interaction.channel },
       bufferingTimeout: 1000,
       disableVolume: false,
-      leaveOnEnd: true,
-      leaveOnStop: true,
+      leaveOnEnd: false,
+      leaveOnStop: false,
       spotifyBridge: false,
     });
 
@@ -45,7 +45,8 @@ module.exports = {
     } catch (e) {
       console.log(e);
     }
-    await queue.play(stream.video_url);
+
+    let song = await queue.play(stream.video_url);
 
     const embed = new EmbedBuilder()
       .setColor(0x23272a)
@@ -63,16 +64,13 @@ module.exports = {
           .react("⏸")
           .then(() => msg.react("⏹"))
           .then(() => msg.react("⏩"))
-          .then(() => msg.react("⏭"))
-          .then(() => msg.react("🔀"))
           .then(() => msg.react("🔂"))
           .then(() => msg.react("🔁"));
 
         const filter = (reaction, user) => {
           return (
-            ["⏸", "⏹", "⏩", "⏭", "🔀", "🔂", "🔁"].includes(
-              reaction.emoji.name
-            ) && user.id === message.author.id
+            ["⏸", "⏹", "⏩", "🔂", "🔁"].includes(reaction.emoji.name) &&
+            user.id === message.author.id
           );
         };
 
@@ -83,46 +81,25 @@ module.exports = {
         collector.on("collect", async (reaction, user) => {
           let reactionName = await reaction.emoji.name;
 
-          if (reactionName === "⏸") {
-            if (!queue)
-              return await interaction.editReply(
-                "there is no song in the queue!"
-              );
-            if (!paused) {
-              await queue.setPaused(false);
-            } else {
-              await queue.setPaused(true);
-            }
-          } else if (reactionName === "⏹") {
-            if (!queue)
-              return await interaction.editReply(
-                "there is no song in the queue!"
-              );
-            await queue.stop();
-          } else if (reactionName === "⏩") {
-            if (!queue)
-              return await interaction.editReply(
-                "there is no song in the queue!"
-              );
-            await queue.skip();
-          } else if (reactionName === "⏭") {
-            if (!queue)
-              return await interaction.editReply("there is no queue!");
-            await queue.clearQueue();
-          } else if (reactionName === "🔀") {
-            if (!queue)
-              return await interaction.editReply("there is no queue!");
-            await queue.shuffle();
-          } else if (reactionName === "🔂") {
-            if (!queue)
-              return await interaction.editReply("there is no queue!");
-            await queue.setRepeatMode(RepeatMode.SONG);
-          } else if (reactionName === "🔁") {
-            if (!queue)
-              return await interaction.editReply(
-                "there is no song in the queue!"
-              );
-            await queue.setRepeatMode(RepeatMode.QUEUE);
+          switch (reactionName) {
+            case "⏸":
+              if (!paused) {
+                await queue.setPaused(false);
+              } else {
+                await queue.setPaused(true);
+              }
+              break;
+            case "⏹":
+              await queue.stop();
+              break;
+            case "⏩":
+              await queue.skip();
+              break;
+            case "🔂":
+              await queue.setRepeatMode(RepeatMode.SONG);
+              break;
+            case "🔁":
+              await queue.setRepeatMode(RepeatMode.QUEUE);
           }
 
           await reaction.users.remove(user.id);

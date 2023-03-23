@@ -25,11 +25,11 @@ const client = new Client({
     GatewayIntentBits.GuildMessageReactions,
   ],
   presence: {
-    status: "idle",
+    status: "online",
     activities: [
       {
-        type: ActivityType.Watching,
-        name: "you creating me 😊",
+        type: ActivityType.Listening,
+        name: "to /play",
       },
     ],
   },

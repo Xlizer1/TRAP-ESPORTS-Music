@@ -1,11 +1,5 @@
 const { RepeatMode } = require("discord-music-player/dist");
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  ButtonStyle,
-  ActionRowBuilder,
-  ButtonBuilder,
-} = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const play = require("play-dl");
 
 module.exports = {
@@ -17,7 +11,31 @@ module.exports = {
         .setName("search")
         .setDescription("Type you song name")
         .setRequired(true)
+        .setAutocomplete(true)
     ),
+  async autocomplete(interaction) {
+    const query = interaction.options.get("search").value;
+    const results = await play.search(query);
+
+    let tracks;
+    tracks = results
+      .map((t) => ({
+        name: t.title,
+        value: t.url,
+      }))
+      .slice(0, 5);
+
+    if (results.playlist) {
+      tracks = results
+        .map(() => ({
+          name: `${results.playlist.title} [playlist]`,
+          value: results.playlist.url,
+        }))
+        .slice(0, 1);
+    }
+
+    return interaction.respond(tracks);
+  },
   async execute(client, interaction) {
     await interaction.deferReply();
     if (!interaction.member.voice.channel)
@@ -42,11 +60,10 @@ module.exports = {
 
     try {
       await queue.join(interaction.member.voice.channel);
+      queue.play(stream.video_url);
     } catch (e) {
       console.log(e);
     }
-
-    let song = await queue.play(stream.video_url);
 
     const embed = new EmbedBuilder()
       .setColor(0x23272a)
@@ -65,45 +82,105 @@ module.exports = {
           .then(() => msg.react("⏹"))
           .then(() => msg.react("⏩"))
           .then(() => msg.react("🔂"))
-          .then(() => msg.react("🔁"));
+          .then(() => msg.react("🔁"))
+          .then(() => msg.react("❌"))
+          .then(async () => {
+            const filter = (reaction, user) => {
+              return (
+                ["⏸", "⏹", "⏩", "🔂", "🔁", "❌"].includes(
+                  reaction.emoji.name
+                ) && user.id === message.author.id
+              );
+            };
 
-        const filter = (reaction, user) => {
-          return (
-            ["⏸", "⏹", "⏩", "🔂", "🔁"].includes(reaction.emoji.name) &&
-            user.id === message.author.id
-          );
-        };
+            const collector = await msg.createReactionCollector(filter);
 
-        const collector = await msg.createReactionCollector(filter);
+            let paused = false;
+            let loop = false;
+            let loopQueue = false;
 
-        let paused = false;
+            collector.on("collect", async (reaction, user) => {
+              let reactionName = await reaction.emoji.name;
 
-        collector.on("collect", async (reaction, user) => {
-          let reactionName = await reaction.emoji.name;
-
-          switch (reactionName) {
-            case "⏸":
-              if (!paused) {
-                await queue.setPaused(false);
-              } else {
-                await queue.setPaused(true);
+              switch (reactionName) {
+                case "⏸":
+                  if (!paused) {
+                    if (!queue)
+                      return interaction.followUp(
+                        "There is no song in the queue to be paused!"
+                      );
+                    await queue.setPaused(true);
+                    await interaction.followUp("song pasued");
+                    paused = true;
+                  } else {
+                    await queue.setPaused(false);
+                    await interaction.followUp("Playing!");
+                    paused = false;
+                  }
+                  break;
+                case "⏹":
+                  if (!queue)
+                    return interaction.followUp(
+                      "There is no song in the queue to be stopped!"
+                    );
+                  await queue.stop();
+                  await queue.destroyed(true);
+                  await interaction.followUp("Stopped playing!");
+                  break;
+                case "⏩":
+                  if (!queue)
+                    return interaction.followUp(
+                      "There is no song in the queue to be skipped!"
+                    );
+                  await queue.skip();
+                  await interaction.followUp("Skipped current song!");
+                  break;
+                case "🔂":
+                  if (!loop) {
+                    if (!queue)
+                      return interaction.followUp(
+                        "There is no song in the queue to be looped!"
+                      );
+                    await queue.setRepeatMode(RepeatMode.SONG);
+                    await interaction.followUp(
+                      "Loop mode for current song is On"
+                    );
+                    loop = true;
+                  } else {
+                    await queue.setRepeatMode(RepeatMode.DISABLED);
+                    await interaction.followUp("Loop mode is off");
+                    loop = false;
+                  }
+                  break;
+                case "🔁":
+                  if (!queue)
+                    return interaction.followUp(
+                      "There is no queue to be looped!"
+                    );
+                  if (!loopQueue) {
+                    await queue.setRepeatMode(RepeatMode.QUEUE);
+                    await interaction.followUp(
+                      "Loop mode for current queue is On"
+                    );
+                    loopQueue = true;
+                  } else {
+                    await queue.setRepeatMode(RepeatMode.DISABLED);
+                    await interaction.followUp("Loop mode is off");
+                    loopQueue = false;
+                  }
+                  break;
+                case "❌":
+                  await queue.leave();
+                  await interaction.followUp("Disconnected");
+                  break;
+                default:
+                  await interaction.followUp("Playing!");
               }
-              break;
-            case "⏹":
-              await queue.stop();
-              break;
-            case "⏩":
-              await queue.skip();
-              break;
-            case "🔂":
-              await queue.setRepeatMode(RepeatMode.SONG);
-              break;
-            case "🔁":
-              await queue.setRepeatMode(RepeatMode.QUEUE);
-          }
 
-          await reaction.users.remove(user.id);
-        });
+              await reaction.users.remove(user.id);
+            });
+          })
+          .catch((e) => console.log(e));
       });
   },
 };

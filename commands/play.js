@@ -76,16 +76,15 @@ module.exports = {
         await queue.join(interaction.member.voice.channel);
         queue.play(stream.video_url);
 
-        embedObj = {
-          ephemeral: true,
-          embeds: [embed],
-        };
-
         embed = new EmbedBuilder()
           .setColor(0x23272a)
           .setTitle(video[0].title)
           .setURL(video[0].url)
           .setDescription(video[0].description);
+        embedObj = {
+          ephemeral: true,
+          embeds: [embed],
+        };
       }
     } catch (e) {
       console.log(e);

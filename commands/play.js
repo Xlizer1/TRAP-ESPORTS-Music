@@ -37,7 +37,6 @@ module.exports = {
     return interaction.respond(tracks);
   },
   async execute(client, interaction) {
-    await interaction.deferReply();
     if (!interaction.member.voice.channel)
       return interaction.editReply("You need to be in voice channel");
 
@@ -93,11 +92,13 @@ module.exports = {
     const message = await interaction.editReply(embedObj).then(async (msg) => {
       await msg
         .react("⏸")
-        .then(() => msg.react("⏹"))
-        .then(() => msg.react("⏩"))
-        .then(() => msg.react("🔂"))
-        .then(() => msg.react("🔁"))
-        .then(() => msg.react("❌"))
+        .then(async () => {
+          await msg.react("⏹");
+          await msg.react("⏩");
+          await msg.react("🔂");
+          await msg.react("🔁");
+          await msg.react("❌");
+        })
         .then(async () => {
           const filter = (reaction, user) => {
             return (

@@ -93,6 +93,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!command) return;
 
   try {
+    await interaction.deferReply();
     await command.execute(client, interaction);
   } catch (error) {
     console.error(error);

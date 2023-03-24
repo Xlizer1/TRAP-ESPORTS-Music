@@ -184,6 +184,7 @@ module.exports = {
                 }
                 break;
               case "❌":
+                await queue.stop();
                 await queue.leave();
                 await interaction.followUp("Disconnected");
                 break;

@@ -61,28 +61,23 @@ for (const file of commandFiles) {
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
-// and deploy your commands!
-client.once("ready", () => {
-  (async () => {
-    try {
-      console.log(
-        `Started refreshing ${commands.length} application (/) commands.`
-      );
-
-      // The put method is used to fully refresh all commands in the guild with the current set
-      const data = await rest.put(
-        Routes.applicationGuildCommands(CLIENTID, GUILDID),
-        { body: commands }
-      );
-
-      console.log(
-        `Successfully loaded ${data.length} application (/) commands.`
-      );
-    } catch (error) {
-      // And of course, make sure you catch and log any errors!
-      console.error(error);
-    }
-  })();
+// The put method is used to fully refresh all commands in the guild with the current set
+client.on("ready", async () => {
+  // Get all ids of the servers
+  console.log(
+    `Started refreshing ${commands.length} application (/) commands.`
+  );
+  const guild_ids = client.guilds.cache.map((guild) => guild.id);
+  for (const guildId of guild_ids) {
+    await rest
+      .put(Routes.applicationGuildCommands(CLIENTID, guildId), {
+        body: commands,
+      })
+      .then(() =>
+        console.log("Successfully updated commands for guild " + guildId)
+      )
+      .catch(console.error);
+  }
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {

@@ -1,4 +1,5 @@
-const { Player } = require("discord-music-player");
+// const { Player } = require("discord-music-player");
+const { Player } = require("discord-player");
 const {
   Client,
   ActivityType,
@@ -12,16 +13,13 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-const { TOKEN, CLIENTID, GUILDID } = process.env;
+const { TOKEN, CLIENTID } = process.env;
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.DirectMessages,
     GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.DirectMessageReactions,
     GatewayIntentBits.GuildMessageReactions,
   ],
   presence: {
@@ -39,6 +37,11 @@ const player = new Player(client, {
   timeout: 86400000,
   volume: 200,
   quality: "high",
+  disableVolume: false,
+  leaveOnEnd: false,
+  leaveOnStop: false,
+  leaveOnEmpty: false,
+  deafenOnJoin: true,
 });
 
 client.player = player;
@@ -81,7 +84,7 @@ client.on("ready", async () => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isCommand()) return;
 
   const command = client.commands.get(interaction.commandName);
 

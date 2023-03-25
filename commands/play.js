@@ -1,4 +1,4 @@
-const { useMasterPlayer, useQueue } = require("discord-player");
+const { useMasterPlayer, useQueue, Track } = require("discord-player");
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 
 module.exports = {
@@ -89,6 +89,7 @@ module.exports = {
                 await msg.react("⏸");
                 await msg.react("⏹");
                 await msg.react("⏩");
+                await msg.react("🔀");
                 await msg.react("🔂");
                 await msg.react("🔁");
                 await msg.react("❌");
@@ -96,7 +97,7 @@ module.exports = {
               .then(async () => {
                 const filter = (reaction, user) => {
                   return (
-                    ["⏪", "⏸", "⏹", "⏩", "🔂", "🔁", "❌"].includes(
+                    ["⏪", "⏸", "⏹", "⏩", "🔀", "🔂", "🔁", "❌"].includes(
                       reaction.emoji.name
                     ) && user.id === message.author.id
                   );
@@ -110,62 +111,68 @@ module.exports = {
 
                 collector.on("collect", async (reaction, user) => {
                   let reactionName = await reaction.emoji.name;
+                  const guildQueue = useQueue(interaction.guild.id);
 
                   switch (reactionName) {
                     case "⏪":
-                      queue.history.back();
+                      guildQueue.history.back();
                       await interaction.followUp("Back to the previous song!");
                       await reaction.users.remove(user.id);
                       break;
                     case "⏸":
                       if (!paused) {
-                        queue.node.pause();
-                        await interaction.followUp("song pasued");
+                        guildQueue.node.pause();
+                        await interaction.followUp("Song pasued!");
                         await reaction.users.remove(user.id);
                         paused = true;
                       } else {
-                        queue.node.resume();
+                        guildQueue.node.resume();
                         await interaction.followUp("Playing!");
                         await reaction.users.remove(user.id);
                         paused = false;
                       }
                       break;
                     case "⏹":
-                      queue.node.stop();
+                      guildQueue.node.stop();
                       await interaction.followUp("Stopped playing!");
                       await reaction.users.remove(user.id);
                       break;
                     case "⏩":
-                      queue.node.skip();
+                      guildQueue.node.skip();
                       await interaction.followUp("Skipped current song!");
+                      await reaction.users.remove(user.id);
+                      break;
+                    case "🔀":
+                      guildQueue.tracks.shuffle();
+                      await interaction.followUp("Shuffle mode is On!");
                       await reaction.users.remove(user.id);
                       break;
                     case "🔂":
                       if (!loop) {
-                        queue.node.setRepeatMode();
+                        guildQueue.node.setRepeatMode("Track");
                         await interaction.followUp(
-                          "Loop mode for current song is On"
+                          "Loop mode for current song is On!"
                         );
                         await reaction.users.remove(user.id);
                         loop = true;
                       } else {
-                        queue.setRepeatMode();
-                        await interaction.followUp("Loop mode is off");
+                        guildQueue.setRepeatMode("Off");
+                        await interaction.followUp("Loop mode is off!");
                         await reaction.users.remove(user.id);
                         loop = false;
                       }
                       break;
                     case "🔁":
                       if (!loopQueue) {
-                        queue.setRepeatMode();
+                        guildQueue.setRepeatMode("Queue");
                         await interaction.followUp(
-                          "Loop mode for current queue is On"
+                          "Loop mode for current queue is On!"
                         );
                         await reaction.users.remove(user.id);
                         loopQueue = true;
                       } else {
-                        queue.setRepeatMode();
-                        await interaction.followUp("Loop mode is off");
+                        guildQueue.setRepeatMode("Off");
+                        await interaction.followUp("Loop mode is off!");
                         await reaction.users.remove(user.id);
                         loopQueue = false;
                       }

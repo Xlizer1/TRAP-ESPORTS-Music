@@ -11,7 +11,7 @@ module.exports = {
         .setDescription("search keyword")
         .setRequired(true)
     ),
-  async execute(client, interaction) {
+  async execute(interaction) {
     if (!interaction.member.voice.channel)
       return interaction.editReply("You need to be in voice channel");
 
@@ -149,14 +149,14 @@ module.exports = {
                       break;
                     case "🔂":
                       if (!loop) {
-                        guildQueue.node.setRepeatMode("Track");
+                        guildQueue.setRepeatMode(1);
                         await interaction.followUp(
                           "Loop mode for current song is On!"
                         );
                         await reaction.users.remove(user.id);
                         loop = true;
                       } else {
-                        guildQueue.setRepeatMode("Off");
+                        guildQueue.setRepeatMode(0);
                         await interaction.followUp("Loop mode is off!");
                         await reaction.users.remove(user.id);
                         loop = false;
@@ -164,14 +164,14 @@ module.exports = {
                       break;
                     case "🔁":
                       if (!loopQueue) {
-                        guildQueue.setRepeatMode("Queue");
+                        guildQueue.setRepeatMode(2);
                         await interaction.followUp(
                           "Loop mode for current queue is On!"
                         );
                         await reaction.users.remove(user.id);
                         loopQueue = true;
                       } else {
-                        guildQueue.setRepeatMode("Off");
+                        guildQueue.setRepeatMode(0);
                         await interaction.followUp("Loop mode is off!");
                         await reaction.users.remove(user.id);
                         loopQueue = false;

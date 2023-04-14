@@ -11,8 +11,8 @@ module.exports = {
         .setDescription("search keyword")
         .setRequired(true)
     ),
-  async execute(interaction) {
-    if (!interaction.member.voice.channel)
+  async execute(client, interaction) {
+    if (!interaction?.member?.voice?.channel)
       return interaction.editReply("You need to be in voice channel");
 
     const player = useMasterPlayer();

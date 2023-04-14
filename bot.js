@@ -77,9 +77,7 @@ client.on("ready", async () => {
         body: commands,
       })
       .then(() =>
-        console.log(
-          "Successfully updated commands for guild " + guildId + " !!"
-        )
+        console.log("Successfully updated commands for guild " + guildId)
       )
       .catch(console.error);
   }

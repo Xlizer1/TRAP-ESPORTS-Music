@@ -12,7 +12,7 @@ module.exports = {
         .setRequired(true)
     ),
   async execute(client, interaction) {
-    if (!interaction?.member?.voice?.channel)
+    if (!interaction.member.voice.channel)
       return interaction.editReply("You need to be in voice channel");
 
     const player = useMasterPlayer();

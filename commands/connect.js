@@ -6,7 +6,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("connect")
     .setDescription("Connect to your voice channel"),
-  async execute(client, interaction) {
+  async execute(interaction) {
     common.connect(interaction);
   },
 };

@@ -92,7 +92,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   try {
     await interaction.deferReply({ fetchReply: true });
-    await command.execute(client, interaction);
+    await command.execute(interaction);
   } catch (error) {
     console.error(error);
     if (interaction.replied || interaction.deferred) {

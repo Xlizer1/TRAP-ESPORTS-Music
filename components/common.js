@@ -259,7 +259,7 @@ module.exports = {
                 await msg.react("❌");
               })
               .then(async () => {
-                const filter = (reaction, user, message) => {
+                const filter = (reaction, user) => {
                   return (
                     ["⏪", "⏸", "⏹", "⏩", "🔀", "🔂", "🔁", "❌"].includes(
                       reaction.emoji.name
@@ -418,7 +418,7 @@ module.exports = {
                 await msg.react("❌");
               })
               .then(async () => {
-                const filter = (reaction, user, message) => {
+                const filter = (reaction, user) => {
                   return (
                     ["⏪", "⏸", "⏹", "⏩", "🔀", "🔂", "🔁", "❌"].includes(
                       reaction.emoji.name
@@ -595,7 +595,7 @@ module.exports = {
                 await msg.react("❌");
               })
               .then(async () => {
-                const filter = (reaction, user, message) => {
+                const filter = (reaction, user) => {
                   return (
                     ["⏪", "⏸", "⏹", "⏩", "🔀", "🔂", "🔁", "❌"].includes(
                       reaction.emoji.name

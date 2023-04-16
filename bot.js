@@ -64,6 +64,8 @@ for (const file of commandFiles) {
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
 
+const servers = 0;
+
 // The put method is used to fully refresh all commands in the guild with the current set
 client.on("ready", async () => {
   // Get all ids of the servers
@@ -77,7 +79,9 @@ client.on("ready", async () => {
         body: commands,
       })
       .then(() =>
-        console.log("Successfully updated commands for guild " + guildId)
+        console.log(
+          `Successfully updated commands for guild ${servers + 1}` + guildId
+        )
       )
       .catch(console.error);
   }

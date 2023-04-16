@@ -40,6 +40,5 @@ jobs:
             pm2 delete all
             cd /root/TRAP-ESPORTS-Music
             git pull --rebase --autostash
-            git pull
             npm install
             pm2 start bot.js
